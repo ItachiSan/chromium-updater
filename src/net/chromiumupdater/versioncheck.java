@@ -5,6 +5,7 @@
 package net.chromiumupdater;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -30,6 +31,11 @@ public class VersionCheck {
     }
 
     public String checkLocal() {
+        String localappdata = System.getenv("LOCALAPPDATA");
+        File actual = new File(localappdata+"/Chromium/Application");
+        for (File f : actual.listFiles()) {
+            System.out.println(f.getName());
+        }
         return localversion;
     }
 
@@ -42,21 +48,11 @@ public class VersionCheck {
         }
         BufferedReader in = null;
         try {
-            in = new BufferedReader(
-                    new InputStreamReader(url.openStream()));
-        } catch (IOException ex) {
-            Logger.getLogger(VersionCheck.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        String inputLine;
-        try {
+            in = new BufferedReader(new InputStreamReader(url.openStream()));
+            String inputLine;
             while ((inputLine = in.readLine()) != null) {
                 return inputLine;
             }
-        } catch (IOException ex) {
-            Logger.getLogger(VersionCheck.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
             in.close();
         } catch (IOException ex) {
             Logger.getLogger(VersionCheck.class.getName()).log(Level.SEVERE, null, ex);
