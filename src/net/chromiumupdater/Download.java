@@ -28,27 +28,26 @@ public class Download {
         //start loading the file
         //display the download speed and estimated time
         //copy file to a dir and let the updater take over again...
+        g.startProgBar();
         HttpURLConnection http = (HttpURLConnection) url.openConnection();
         int size = Integer.parseInt(http.getHeaderField("Content-Length"));
         http.connect(); 
         BufferedInputStream in = new BufferedInputStream(http.getInputStream());
         OutputStream out = new BufferedOutputStream( new FileOutputStream(saveFile));
-        byte[] buffer = new byte[256];
+        byte[] buffer = new byte[512];
         int n = 0;
-        int i = 1;
-        int progress=1;
         int donesize=size;
         int done = 0;
+        g.setProgressMinMax(0, size);
         while((n=in.read(buffer))>=0) {
             out.write(buffer, 0, n);
-            donesize = donesize-256;
-            done = size - donesize;
-            System.out.println(done);
-            System.out.println(size);
-            //g.setProgress(done/size);
-            i++;
+            done += n;
+            System.out.println("got "+done/1000+" KB of "+size/1000+" KB");
+            g.setProgress(done);
         }
         out.flush();
         out.close();
+        
+        http.disconnect();
     }    
 }

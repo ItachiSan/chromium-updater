@@ -24,8 +24,21 @@ public class GUI extends javax.swing.JFrame {
         remoteversion.setText(version.toString());
     }
     
-    public void setProgress(int prozent) {
-        progressBar.setValue(prozent);
+    public void setProgress(int value) {
+        progressBar.setIndeterminate(false);
+        progressBar.setValue(value);
+        Thread.yield();
+    }
+    
+    public void startProgBar() {
+        progressBar.setMinimum(0);
+        progressBar.setMaximum(1);
+        progressBar.setIndeterminate(true);
+    }
+    
+    public void setProgressMinMax(int min, int max) {
+        progressBar.setMinimum(min);
+        progressBar.setMaximum(max);
     }
 
     /**
@@ -148,18 +161,18 @@ public class GUI extends javax.swing.JFrame {
     }//GEN-LAST:event_checkButtonActionPerformed
 
     private void updateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateButtonActionPerformed
-        ChromiumUpdater.download(this);
+        ChromiumUpdater.update(this);
     }//GEN-LAST:event_updateButtonActionPerformed
 
     private void aboutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutButtonActionPerformed
         AboutGui ag = new AboutGui();
-        ag.runabout();
+        ag.runAbout();
     }//GEN-LAST:event_aboutButtonActionPerformed
 
     /**
      * @param args the command line arguments
      */
-    public static void rungui() {
+    public void runGUI() {
         /*
          * Set the Nimbus look and feel
          */
@@ -170,8 +183,10 @@ public class GUI extends javax.swing.JFrame {
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                System.out.println(info.getName());
                 if ("Nimbus".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    System.out.println("yay");
                     break;
                 }
             }
@@ -192,7 +207,7 @@ public class GUI extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new GUI().setVisible(true);
+                setVisible(true);
             }
         });
     }

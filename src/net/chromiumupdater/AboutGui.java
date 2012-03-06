@@ -9,12 +9,22 @@ package net.chromiumupdater;
  * @author morth
  */
 public class AboutGui extends javax.swing.JFrame {
-
+    
+    static AboutGui singleton;
+    
     /**
      * Creates new form AboutGui
      */
     public AboutGui() {
+        if(singleton!=null) {
+            //what the fuck? stfu!
+        }
         initComponents();
+        //TODO notify other window to come in foreground
+        dispose();
+        singleton=this;
+        
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
     }
 
     /**
@@ -63,7 +73,7 @@ public class AboutGui extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-    public static void runabout() {
+    public void runAbout() {
         /*
          * Set the Nimbus look and feel
          */
@@ -94,12 +104,13 @@ public class AboutGui extends javax.swing.JFrame {
          * Create and display the form
          */
         java.awt.EventQueue.invokeLater(new Runnable() {
-
+            @Override
             public void run() {
-                new AboutGui().setVisible(true);
+                setVisible(true);
             }
         });
     }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
