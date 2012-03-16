@@ -1,13 +1,6 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package net.chromiumupdater;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -30,18 +23,25 @@ public class VersionCheck {
     public VersionCheck(byte platform) {
         this.platform = platform;
     }
-
-    public String checkLocal() {
-        String localappdata = System.getenv("LOCALAPPDATA");
-        File actual = new File(localappdata+"/Chromium/Application");
-        if(actual.canRead()) {
-            for (File f : actual.listFiles()) {
-                System.out.println(f.getName());
+    
+    /**
+     * 
+     * @return returns the build number, if a installation is found or instead 0
+     */
+    public int checkInstall() {
+        String programFiles = System.getenv("PROGRAMFILES");
+        File f = new File(programFiles+"\\Chromium\\build");
+        try {
+            FileReader fr = new FileReader(f);
+            BufferedReader br = new BufferedReader(fr);
+            try {
+                return Integer.parseInt(br.readLine());
+            } catch (IOException ex) {
+                return 0;
             }
-        } else {//it isn't here. check somewhere else.
-            
+        } catch (FileNotFoundException ex) {
+            return 0;
         }
-        return localversion;
     }
 
     public int checkRemote() {
