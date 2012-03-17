@@ -17,8 +17,6 @@ public class VersionCheck {
     byte platform;
     public static byte WINDOWS = 0;
     public static byte MAC = 1;
-    private String localversion;
-    private String remoteversion;
 
     public VersionCheck(byte platform) {
         this.platform = platform;
@@ -29,8 +27,7 @@ public class VersionCheck {
      * @return returns the build number, if a installation is found or instead 0
      */
     public int checkInstall() {
-        String programFiles = System.getenv("PROGRAMFILES");
-        File f = new File(programFiles+"\\Chromium\\build");
+        File f = new File(ChromiumUpdater.installDir);
         try {
             FileReader fr = new FileReader(f);
             BufferedReader br = new BufferedReader(fr);

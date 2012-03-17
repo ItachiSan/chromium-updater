@@ -18,29 +18,32 @@ public class ChromiumUpdater {
     static Download download;
     public static int localversion;
     public static int remoteversion;
+    public static String tempDir = "C:\\temp\\chrome\\";
+    public static String installDir = System.getenv("PROGRAMFILES") + "\\Chromium\\";
 
     public static void main(String[] args) {
         gui = new GUI();
         gui.runGUI();
+        check(gui);
     }
 
     public static void check(GUI g) {
         VersionCheck check = new VersionCheck(VersionCheck.WINDOWS);
         remoteversion = check.checkRemote();
-        
+
         Settings settings = new Settings(remoteversion);
         settings.load();
         localversion = settings.build;
-        g.setLastUpdateTime(settings.lastChecked);        
+        g.setLastUpdateTime(settings.lastChecked);
         g.setLocalVersion(localversion);
         g.setRemoteVersion(remoteversion);
         if (localversion < remoteversion) {
             g.showUpdateButton();
+        } else {
+            g.setLabel("already up-to-date!");
         }
-        //show if there is already a installed version
-        //or if we should download and install one first
     }
-    
+
     public static void save() {
         Settings settings = new Settings(remoteversion);
         settings.save();
@@ -48,7 +51,10 @@ public class ChromiumUpdater {
 
     static void download(GUI g) {
         URL dlurl = null;
-        File f = new File("C:\\chrome-win32-" + remoteversion + ".zip");
+        if(!new File(tempDir).exists()) {
+            new File(tempDir).mkdirs();      
+        }
+        File f = new File(tempDir+"chrome-win32-" + remoteversion + ".zip");
         try {
             dlurl = new URL("http://commondatastorage.googleapis.com/chromium-browser-continuous/Win/" + remoteversion + "/chrome-win32.zip");
         } catch (MalformedURLException ex) {
@@ -61,81 +67,62 @@ public class ChromiumUpdater {
         }
     }
 
-    static void update(GUI g) {
-        //start the download in a new thread
-        Thread t = new Thread() {
-
-            @Override
-            public void run() {
-                //download
-                download(gui);
-                //delete old build and aks if user wants this. maybe backup function here
-                //unzip to programfiles folder
-                unzip("C:\\chrome-win32-" + remoteversion + ".zip", System.getenv("PROGRAMFILES") + "\\Chromium\\");
-                //pop messagebox OR just show the success in the label. i think that's easier
-                //save new build number and a timestamp
-                save();
-                
-            }
-        };
-        t.setPriority((Thread.MIN_PRIORITY + Thread.NORM_PRIORITY) / 2);
-        t.start();
-    }
-
     /**
      *
      * @param filename the file to unzip
      * @param destination the desinationfolder, should look like c:\\path\\to\\folder\\
      */
     static void unzip(String filename, String destination) {
-        File dest = new File(destination);
-        if(!dest.exists()) {
-            dest.mkdirs();
-        }
-        byte[] buffer = new byte[1024];
-        ZipInputStream in = null;
-        FileOutputStream out = null;
-        ZipEntry entry = null;
+        Unzip zip = new Unzip(new File(filename), new File(destination));
         try {
-            in = new ZipInputStream(new FileInputStream(filename));
-            entry = in.getNextEntry();
-        } catch (IOException ex) {
+            zip.extract();
+        } catch (Exception ex) {
+            System.out.println("Fehler beim entpacken!");
         }
-        while (entry != null) {
-            try {
-                String entryName = entry.getName();
-                System.out.println("entryname " + entryName);
-                int n;
-                out = null;
-                File f = new File(entryName);
-                String directory = f.getParent();
-                if (directory == null) {
-                    if (f.isDirectory()) {
-                        break;
-                    }
-                }
-                out = new FileOutputStream(destination + entryName);
-                while ((n = in.read(buffer, 0, 1024)) > -1) {
-                    out.write(buffer, 0, n);
-                }
-            } catch (IOException ex) {
-            } finally {
-                try {
-                    if(out != null)
-                        out.close();
-                } catch (IOException ex) {
-                }
-            }
-            try {
-                in.close();
-            } catch (IOException ex) {
-            }
-            try {
-                entry = in.getNextEntry();
-            } catch (IOException ex) {
-                System.out.println("Can't get next file entry ...");
-                break;
+    }
+    
+    static boolean deleteDir(File dir) {
+        if(dir.isDirectory()) {
+            String[] children = dir.list();
+            for(int i = 0;i<children.length;i++) {
+                boolean success = deleteDir(new File(dir,children[i]));
+                if(!success)
+                    return false;
             }
         }
+            
+        return dir.delete();
+    }
+
+    static void update(final GUI g) {
+        //start the download in a new thread
+        Thread t = new Thread() {
+
+            @Override
+            public void run() {
+                //download the latest build
+                System.out.println("Downloading ...");
+                download(gui);
+                //TODO: delete old build and ask if user wants a backup or cancel
+                System.out.println("Download done. Deleting install directory ...");
+                if(!deleteDir(new File(installDir)))
+                    System.out.println("Error while deleting old installation!");
+                //unzip to program files folder 
+                System.out.println("Deleting done. Unzipping new build into install directory ...");
+                unzip(tempDir+"chrome-win32-" + remoteversion + ".zip", installDir);
+                System.out.println("Done ... Deleting temp files.");
+                if(!deleteDir(new File(tempDir)))
+                    System.out.println("Error while deleting temp files!");
+                //save new build number and a timestamp
+                save();
+                localversion = remoteversion;
+                g.setLocalVersion(localversion);
+                g.setLastUpdateTime(System.currentTimeMillis());
+                g.setLabel("Done!");
+                
+            }
+        };
+        t.setPriority((Thread.MIN_PRIORITY + Thread.NORM_PRIORITY) / 2);
+        t.start();
     }
 }

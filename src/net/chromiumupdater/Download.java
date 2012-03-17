@@ -11,7 +11,7 @@ import java.net.URLConnection;
 
 /**
  *
- * @author morth
+ * @author morth, cfstras
  */
 public class Download {
     private final URL url;
@@ -24,10 +24,6 @@ public class Download {
     }
     
     public void download() throws IOException {
-        //get the file size
-        //start loading the file
-        //display the download speed and estimated time
-        //copy file to a dir and let the updater take over again...
         g.startProgBar();
         HttpURLConnection http = (HttpURLConnection) url.openConnection();
         int size = Integer.parseInt(http.getHeaderField("Content-Length"));
@@ -36,13 +32,14 @@ public class Download {
         OutputStream out = new BufferedOutputStream( new FileOutputStream(saveFile));
         byte[] buffer = new byte[512];
         int n = 0;
-        int donesize=size;
         int done = 0;
         g.setProgressMinMax(0, size);
         while((n=in.read(buffer))>=0) {
             out.write(buffer, 0, n);
             done += n;
-            System.out.println("got "+done/1000+" KB of "+size/1000+" KB");
+            //System.out.println("got "+done/1000+" KB of "+size/1000+" KB");
+            //TODO: show download speed
+            g.setProgressBarText(done/1000+" / "+size/1000+" KB");
             g.setProgress(done);
         }
         out.flush();
