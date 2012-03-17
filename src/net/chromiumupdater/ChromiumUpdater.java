@@ -26,10 +26,12 @@ public class ChromiumUpdater {
 
     public static void check(GUI g) {
         VersionCheck check = new VersionCheck(VersionCheck.WINDOWS);
-        //Integer localversion = Integer.parseInt(check.checkLocal());
-        localversion = check.checkInstall();
-        System.out.println(localversion);
         remoteversion = check.checkRemote();
+        
+        Settings settings = new Settings(remoteversion);
+        settings.load();
+        localversion = settings.build;
+        g.setLastUpdateTime(settings.lastChecked);        
         g.setLocalVersion(localversion);
         g.setRemoteVersion(remoteversion);
         if (localversion < remoteversion) {
@@ -37,6 +39,11 @@ public class ChromiumUpdater {
         }
         //show if there is already a installed version
         //or if we should download and install one first
+    }
+    
+    public static void save() {
+        Settings settings = new Settings(remoteversion);
+        settings.save();
     }
 
     static void download(GUI g) {
@@ -62,10 +69,13 @@ public class ChromiumUpdater {
             public void run() {
                 //download
                 download(gui);
+                //delete old build and aks if user wants this. maybe backup function here
                 //unzip to programfiles folder
                 unzip("C:\\chrome-win32-" + remoteversion + ".zip", System.getenv("PROGRAMFILES") + "\\Chromium\\");
-                //pop messagebox
-
+                //pop messagebox OR just show the success in the label. i think that's easier
+                //save new build number and a timestamp
+                save();
+                
             }
         };
         t.setPriority((Thread.MIN_PRIORITY + Thread.NORM_PRIORITY) / 2);
