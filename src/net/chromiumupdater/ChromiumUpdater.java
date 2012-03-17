@@ -81,11 +81,11 @@ public class ChromiumUpdater {
         }
     }
     
-    static boolean deleteDir(File dir) {
+    static boolean delete(File dir) {
         if(dir.isDirectory()) {
             String[] children = dir.list();
             for(int i = 0;i<children.length;i++) {
-                boolean success = deleteDir(new File(dir,children[i]));
+                boolean success = delete(new File(dir,children[i]));
                 if(!success)
                     return false;
             }
@@ -105,14 +105,17 @@ public class ChromiumUpdater {
                 download(gui);
                 //TODO: delete old build and ask if user wants a backup or cancel
                 System.out.println("Download done. Deleting install directory ...");
-                if(!deleteDir(new File(installDir)))
-                    System.out.println("Error while deleting old installation!");
+                if(localversion != 0) 
+                    if(!delete(new File(installDir)))
+                        System.out.println("Error while deleting old installation!");
+                    else 
+                        System.out.println("Deleting done. Unzipping new build into install directory ...");
                 //unzip to program files folder 
-                System.out.println("Deleting done. Unzipping new build into install directory ...");
-                unzip(tempDir+"chrome-win32-" + remoteversion + ".zip", installDir);
-                System.out.println("Done ... Deleting temp files.");
-                if(!deleteDir(new File(tempDir)))
+                unzip(tempDir+"chrome-win32-" + remoteversion + ".zip", installDir);            
+                if(!delete(new File(tempDir+"chrome-win32-" + remoteversion + ".zip")))
                     System.out.println("Error while deleting temp files!");
+                else
+                    System.out.println("Done ... Deleting temp files.");
                 //save new build number and a timestamp
                 save();
                 localversion = remoteversion;
