@@ -37,7 +37,8 @@ public class Unzip {
                 ZipEntry entry = (ZipEntry) entries.nextElement();
 
                 String entryFileName = entry.getName();
-
+                //TODO strip "chrome-win32 from pathnames!"
+                System.out.println("Unzip: "+entryFileName);
                 File dir = buildDirectoryHierarchyFor(entryFileName, destDir);
 
                 if (!dir.exists()) {

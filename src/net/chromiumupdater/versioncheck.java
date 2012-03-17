@@ -15,11 +15,13 @@ public class VersionCheck {
 
     String remoteurl = "http://commondatastorage.googleapis.com/chromium-browser-continuous/Win/LAST_CHANGE";
     byte platform;
+    Settings settings;
     public static byte WINDOWS = 0;
     public static byte MAC = 1;
 
-    public VersionCheck(byte platform) {
+    public VersionCheck(byte platform, Settings settings) {
         this.platform = platform;
+        this.settings = settings;
     }
     
     /**
@@ -32,7 +34,9 @@ public class VersionCheck {
             FileReader fr = new FileReader(f);
             BufferedReader br = new BufferedReader(fr);
             try {
-                return Integer.parseInt(br.readLine());
+                int build = Integer.parseInt(br.readLine());
+                settings.localBuild = build;
+                return build;
             } catch (IOException ex) {
                 return 0;
             }
@@ -54,7 +58,11 @@ public class VersionCheck {
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
                 try {
-                    return Integer.parseInt(inputLine);
+                    int build = Integer.parseInt(inputLine);
+                    settings.remoteBuild = build;
+                    settings.lastRemoteCheck = System.currentTimeMillis();
+                    settings.save();
+                    return build;
                 } catch (NumberFormatException ex) {
                     Logger.getLogger(VersionCheck.class.getName()).log(Level.SEVERE,
                     "Error: Checking version failed. Either Google is having problems or this program is outdated.",ex);

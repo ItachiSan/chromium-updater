@@ -27,24 +27,22 @@ public class Download {
         g.startProgBar();
         HttpURLConnection http = (HttpURLConnection) url.openConnection();
         int size = Integer.parseInt(http.getHeaderField("Content-Length"));
-        http.connect(); 
+        
         BufferedInputStream in = new BufferedInputStream(http.getInputStream());
         OutputStream out = new BufferedOutputStream( new FileOutputStream(saveFile));
-        byte[] buffer = new byte[512];
+        byte[] buffer = new byte[1024];
         int n = 0;
         int done = 0;
         g.setProgressMinMax(0, size);
         while((n=in.read(buffer))>=0) {
             out.write(buffer, 0, n);
             done += n;
-            //System.out.println("got "+done/1000+" KB of "+size/1000+" KB");
             //TODO: show download speed
-            g.setProgressBarText(done/1000+" / "+size/1000+" KB");
+            g.setProgressBarText(done/1024+" / "+size/1024+" KB");
             g.setProgress(done);
         }
         out.flush();
         out.close();
-        
         http.disconnect();
     }    
 }
