@@ -1,12 +1,9 @@
 package net.chromiumupdater;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import javax.swing.JOptionPane;
 
 /**
@@ -17,11 +14,29 @@ public class ChromiumUpdater {
 
     protected static GUI gui;
     static Download download;
-    public static String tempDir = "C:\\temp\\chrome\\"; //TODO replace this with system-builtin temp dir
-    public static String installDir = System.getenv("PROGRAMFILES") + "\\Chromium\\"; //TODO replace this with something generic (from settings)
+    public static String baseDLUrl = "http://commondatastorage.googleapis.com/chromium-browser-continuous/";
+    public static String tempDir;
+    public static String installDir;
     static Settings settings;
+    public static URL dlurl;
+    public static boolean win32 = false;
+    public static boolean macosx = false;
     
     public static void main(String[] args) {
+        if(System.getProperty("os.name").contains("Mac OS X")) {
+            macosx = true;
+            tempDir = "mactempdir"; //TODO find the mac temp folder
+            installDir = null;
+        } else if (System.getProperty("os.name").contains("Windows")) {
+            win32 = true;
+            tempDir = System.getenv("TMP");
+            installDir = System.getenv("PROGRAMFILES") + "\\Chromium\\"; //TODO replace this with something generic (from settings)
+        } else {
+            System.out.println("Your OS is currently not supported. Please refer to google for a suitable chromium build.");
+            //TODO: make ^ this as a pop up box or similar
+            System.exit(1);
+        }
+                
         settings = Settings.load();
         gui = new GUI();
         gui.runGUI();
@@ -32,7 +47,7 @@ public class ChromiumUpdater {
     }
 
     public static void check(GUI g) {
-        VersionCheck check = new VersionCheck(VersionCheck.WINDOWS, settings);
+        VersionCheck check = new VersionCheck(win32, settings);
         check.checkRemote();
         g.setLastUpdateTime(settings.lastRemoteCheck);
         g.setLocalVersion(settings.localBuild);
@@ -44,19 +59,19 @@ public class ChromiumUpdater {
         }
     }
 
-    public static void save() {
-        settings.save();
-    }
-
     static File download(GUI g, int build) {
         try {
-            File f = File.createTempFile("chrome-win32-" + build , ".zip");
+            File f = File.createTempFile("chrome-"+(win32?"win32":"mac")+"-" + build , ".zip");
             f.deleteOnExit();
             if(!f.exists()) {
                 //ohmygodwearegoingtodie
                 return null;
             }
-            URL dlurl = new URL("http://commondatastorage.googleapis.com/chromium-browser-continuous/Win/" + build + "/chrome-win32.zip");
+            if(win32) {
+                dlurl = new URL(baseDLUrl+"Win/" + build + "/chrome-win32.zip");
+            } else if(macosx) {
+                dlurl = new URL(baseDLUrl+"/Mac/" + build + "/chrome-mac.zip");
+            }
             
             //TODO check if already downloading!
             download = new Download(dlurl, f, g);
@@ -105,6 +120,7 @@ public class ChromiumUpdater {
     static void update(final GUI g) {
         //start the download in a new thread
         Thread t = new Thread() {
+
             @Override
             public void run() {
                 Settings s = ChromiumUpdater.settings;
@@ -140,25 +156,33 @@ public class ChromiumUpdater {
                 //download the latest build
                 System.out.println("Downloading ...");
                 File f = download(gui, buildToDownload);
-                //TODO: delete old build and ask if user wants a backup or cancel
-                System.out.println("Download done. Deleting install directory ...");
-                //if(settings.localBuild != 0) 
-                if(!delete(new File(installDir)))
-                    System.out.println("Error while deleting old installation!");
-                else 
-                    System.out.println("Done. Unzipping new build into install directory ...");
-                //unzip to program files folder 
-                unzip(f, installDir);      
-                System.out.println("deleting tempfiles...");
-                if(!delete(f))
-                    System.out.println("Error while deleting temp file!");
-                else
-                    System.out.println("tempfiles deleted.");
+                System.out.println("Download done. Cleaning install directory ...");
+                if (macosx) {
+                    //TODO: delete old .app file
+                } else if (win32) {
+                    if (!delete(new File(installDir))) {
+                        System.out.println("Error whilst cleaning install directory!");
+                    } else {
+                        System.out.println("Done. Unzipping new build into install directory ...");
+                    }
+                }
+                if (win32) {
+                    unzip(f, installDir); //unzip to program files folder 
+                } else if (macosx) {
+                    unzip(f, tempDir); //unzip to temp dir
+                    //TODO: copy to Applications using AppleScript (why do we need privileges? fuck apple.)
+                }
+                System.out.println("Deleting temporary files...");
+                if (!delete(f)) {
+                    System.out.println("Error whilst deleting temporary file!");
+                } else {
+                    System.out.println("Temporary files deleted.");
+                }
+
                 //save new build number and a timestamp
-                
-                s.localBuild=buildToDownload;
-                s.lastUpdate=System.currentTimeMillis();
-                save();
+                s.localBuild = buildToDownload;
+                s.lastUpdate = System.currentTimeMillis();
+                settings.save();
                 g.setLocalVersion(buildToDownload);
                 g.setLastUpdateTime(s.lastUpdate);
                 g.setLabel("Done!");

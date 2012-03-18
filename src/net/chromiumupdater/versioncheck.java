@@ -12,16 +12,14 @@ import java.util.logging.Logger;
  * @author morth
  */
 public class VersionCheck {
-
-    String remoteurl = "http://commondatastorage.googleapis.com/chromium-browser-continuous/Win/LAST_CHANGE";
-    byte platform;
+    String remoteurl;
+    boolean platform; //true: win ; false = macosx
     Settings settings;
-    public static byte WINDOWS = 0;
-    public static byte MAC = 1;
 
-    public VersionCheck(byte platform, Settings settings) {
+    public VersionCheck(boolean platform, Settings settings) {
         this.platform = platform;
         this.settings = settings;
+        remoteurl = ChromiumUpdater.baseDLUrl + (platform?"Win":"Mac") + "/LAST_CHANGE";
     }
     
     /**
