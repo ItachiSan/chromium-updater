@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 /**
@@ -19,19 +21,24 @@ public class ChromiumUpdater {
     public static String installDir;
     static Settings settings;
     public static URL dlurl;
+    public static boolean win32 = false;
+    public static boolean macosx = false;
 
     public static void main(String[] args) {
         if (System.getProperty("os.name").contains("Mac OS X")) {
+            macosx = true;
             tempDir = "mactempdir"; //TODO find the mac temp folder
             installDir = null;
         } else if (System.getProperty("os.name").contains("Windows")) {
+            win32 = true;
             tempDir = System.getenv("TMP");
-            installDir = System.getenv("PROGRAMFILES") + "\\Chromium\\"; //TODO replace this with something generic (from settings)
+            installDir = System.getenv("PROGRAMFILES") + "/Chromium/";
         } else {
             System.out.println("Your OS is currently not supported. Please refer to google for a suitable chromium build.");
+            //TODO: make ^ this as a pop up box or similar
             System.exit(1);
         }
-
+        
         settings = Settings.load();
         if (settings.OS == -1) {
             if (System.getProperty("os.name").contains("Windows")) {
@@ -42,15 +49,19 @@ public class ChromiumUpdater {
             }
         }
         gui = new GUI();
+        download = new Download(gui);
+        
         gui.runGUI();
-
+        
+        
+        
         check(gui);
 
-        //TODO add shutdown-hook to save settings
-        
-        
-        
-        
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override public void run() {
+                settings.save();
+            }
+        });
     }
 
     public static void check(GUI g) {
@@ -68,21 +79,18 @@ public class ChromiumUpdater {
 
     static File download(GUI g, int build) {
         try {
-            File f = File.createTempFile("chrome-" + ((settings.OS ==  settings.WIN32) ? "win32" : "mac") + "-" + build, ".zip");
+            File f = File.createTempFile("chrome-" + (win32 ? "win32" : "mac") + "-" + build, ".zip");
             f.deleteOnExit();
             if (!f.exists()) {
                 //ohmygodwearegoingtodie
                 return null;
             }
-            if (settings.OS ==  settings.WIN32) {
+            if (win32) {
                 dlurl = new URL(baseDLUrl + "Win/" + build + "/chrome-win32.zip");
-            } else if (settings.OS ==  settings.MACOSX) {
-                dlurl = new URL(baseDLUrl + "Mac/" + build + "/chrome-mac.zip");
+            } else if (macosx) {
+                dlurl = new URL(baseDLUrl + "/Mac/" + build + "/chrome-mac.zip");
             }
-
-            //TODO check if already downloading!
-            download = new Download(dlurl, f, g);
-            download.download();
+            download.download(dlurl, f);
             return f;
         } catch (MalformedURLException ex) {
             ex.printStackTrace();
@@ -165,30 +173,24 @@ public class ChromiumUpdater {
                 System.out.println("Downloading ...");
                 File f = download(gui, buildToDownload);
                 System.out.println("Download done. Cleaning install directory ...");
-                if (settings.OS ==  settings.MACOSX) {
-                    Unzip.extractResource("res/cocoasudo");
-                    String delcmd = "./cocoasudo --prompt=\"Copying Chromium to Applications\" rm -r Applications/Chromium.app";
-                    Runtime run = Runtime.getRuntime();
-                    try {
-                        Process pr = run.exec(delcmd);
-                    } catch (IOException ex) {
-                        System.out.println("Error ");
-                    }
-                } else if (settings.OS ==  settings.WIN32) {
+                if (macosx) {
+                    //TODO: delete old .app file
+                } else if (win32) {
                     if (!delete(new File(installDir))) {
                         System.out.println("Error whilst cleaning install directory!");
                     } else {
                         System.out.println("Done. Unzipping new build into install directory ...");
                     }
                 }
+                //TODO add unzip time to GUI progressbar
                 if (settings.OS == settings.WIN32) {
                     unzip(f, installDir); //unzip to program files folder 
                 } else if (settings.OS == settings.MACOSX) {
                     unzip(f, tempDir); //unzip to temp dir
                     //TODO: load the cocoasudo binary
-                    String copycmd = "./cocoasudo --prompt=\"Copying Chromium to Applications\" mv -r " + tempDir +" Applications/";
+                    Runtime run = Runtime.getRuntime();
+                    String copycmd = "./cocoasudo --prompt=\"Copying Chromium to Applications\" mv " + tempDir +" Applications/";
                     try {
-                        Runtime run = Runtime.getRuntime();
                         Process pr = run.exec(copycmd);
                     } catch (IOException ex) {
                         System.out.println("Error whilst copying to Applications");

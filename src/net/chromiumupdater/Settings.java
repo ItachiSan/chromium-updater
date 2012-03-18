@@ -34,8 +34,8 @@ public class Settings implements Serializable {
     
     public byte OS = -1;
     
-    public byte WIN32 = 0;
-    public byte MACOSX = 1;
+    public static final byte WIN32 = 0;
+    public static final byte MACOSX = 1;
     
     public long minCheckTime = 60*60*1000; // download max. 60 minutes old versions
 
@@ -46,7 +46,7 @@ public class Settings implements Serializable {
         File f = new File(ChromiumUpdater.installDir+"updater-settings");
         
         ObjectOutputStream oos = null;
-        try { //TODO serialize this class
+        try {
             if(!f.exists()){
                 f.getParentFile().mkdirs();
                 f.createNewFile();
@@ -75,7 +75,7 @@ public class Settings implements Serializable {
         
         ObjectInputStream ois = null;
         Object o=null;
-        try { //TODO serialize this class
+        try {
             ois = new ObjectInputStream(new FileInputStream(f));
             o = ois.readObject();
         } catch (FileNotFoundException ex) {
