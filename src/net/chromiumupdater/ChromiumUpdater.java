@@ -32,13 +32,13 @@ public class ChromiumUpdater {
         } else if (System.getProperty("os.name").contains("Windows")) {
             win32 = true;
             tempDir = System.getenv("TMP");
-            installDir = System.getenv("PROGRAMFILES") + "\\Chromium\\"; //TODO replace this with something generic (from settings)
+            installDir = System.getenv("PROGRAMFILES") + "/Chromium/";
         } else {
             System.out.println("Your OS is currently not supported. Please refer to google for a suitable chromium build.");
             //TODO: make ^ this as a pop up box or similar
             System.exit(1);
         }
-
+        
         settings = Settings.load();
         if (settings.OS == -1) {
             if (System.getProperty("os.name").contains("Windows")) {
@@ -49,11 +49,19 @@ public class ChromiumUpdater {
             }
         }
         gui = new GUI();
+        download = new Download(gui);
+        
         gui.runGUI();
-
+        
+        
+        
         check(gui);
 
-        //TODO add shutdown-hook to save settings
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override public void run() {
+                settings.save();
+            }
+        });
     }
 
     public static void check(GUI g) {
@@ -82,10 +90,7 @@ public class ChromiumUpdater {
             } else if (macosx) {
                 dlurl = new URL(baseDLUrl + "/Mac/" + build + "/chrome-mac.zip");
             }
-
-            //TODO check if already downloading!
-            download = new Download(dlurl, f, g);
-            download.download();
+            download.download(dlurl, f);
             return f;
         } catch (MalformedURLException ex) {
             ex.printStackTrace();
@@ -177,6 +182,7 @@ public class ChromiumUpdater {
                         System.out.println("Done. Unzipping new build into install directory ...");
                     }
                 }
+                //TODO add unzip time to GUI progressbar
                 if (settings.OS == settings.WIN32) {
                     unzip(f, installDir); //unzip to program files folder 
                 } else if (settings.OS == settings.MACOSX) {

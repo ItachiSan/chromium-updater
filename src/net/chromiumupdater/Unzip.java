@@ -4,6 +4,8 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -75,8 +77,58 @@ public class Unzip {
         return new File(destDir, internalPathToEntry);
     }
     
-    public static File extractRes() {
-       //TODO
-        return new File("");
+    /**
+     * takes a name of a file in the res folder, extracts it to a temp file and returns the created file.
+     * the file will be set as "delete on exit" and have +x.
+     * please delete it when you're finished, just to be sure
+     * @param name
+     * @return a file object pointing to a temp file or null, if not found
+     */
+    public static File extractResource(String name) {
+        InputStream is = Unzip.class.getResourceAsStream("res/"+name);
+        if(is==null) {
+            System.out.println("Error: could not find resource "+name+" in package.");
+            return null;
+        }
+        File f=null;
+        FileOutputStream fos = null;
+        try {
+            f = File.createTempFile(name, ".tmp");
+            if(f==null) {
+                System.out.println("Error creating temp file");
+                return null;
+            }
+            byte[] buf = new byte[1024];
+            int n=0;
+            fos = new FileOutputStream(f);
+            
+            while( (n=is.read(buf)) > -1) {
+                fos.write(buf, 0, n);
+            }
+            fos.flush();
+            
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally  {
+            if(is!=null) {
+                try {
+                    is.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            if(fos!=null) {
+                try {
+                    fos.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+        if(fos!=null) {
+            f.setExecutable(true);
+            return f;
+        }
+        return null;
     }
 }
