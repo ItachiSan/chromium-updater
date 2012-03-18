@@ -36,7 +36,6 @@ public class Download {
         while((n=in.read(buffer))>=0) {
             out.write(buffer, 0, n);
             done += n;
-            //TODO: show download speed
             g.setProgressBarText(done/1024+" / "+size/1024+" KB");
             g.setProgress(done);
         }
