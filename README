@@ -13,15 +13,17 @@ chromium-updater
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 	
 Hi there.
+this is an attempt to make an updater for chromium for Windows and Mac OS X.
+Linux/Unix will not be supported, because most linuxoid systems have their own package manager with up-to-date builds of chromium.
 
-this is an attempt to make an updater for chromium, mainly for windows and for mac,
-because most linuxoid systems have their own package managers with up-to-date builds of chromium.
+At the moment this program pulls the most recent build from http://commondatastorage.googleapis.com/chromium-browser-continuous/index.html 
+and unpacks it to the windows program files folder respectively the Mac Applications folder.
 
-this program pulls the most recent(or most stable) build from
-http://commondatastorage.googleapis.com/chromium-browser-continuous/index.html
+Full Mac support is coming soon-ish, when we have managed it, to copy files into the Applications folder ... ;-)
 
-and unpacks it to a location of your choice,
-(backing up older versions).
+When the main development is done, we'll provide finished builds here without all the debugging code. And maybe an .app for Mac OS X
+
+Regards,
+morth & cfstras
