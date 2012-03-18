@@ -13,13 +13,11 @@ import java.util.logging.Logger;
  */
 public class VersionCheck {
     String remoteurl;
-    boolean platform; //true: win ; false = macosx
     Settings settings;
 
-    public VersionCheck(boolean platform, Settings settings) {
-        this.platform = platform;
-        this.settings = settings;
-        remoteurl = ChromiumUpdater.baseDLUrl + (platform?"Win":"Mac") + "/LAST_CHANGE";
+    public VersionCheck(Settings settings) {
+        this.settings = settings;   
+        remoteurl = ChromiumUpdater.baseDLUrl + ((settings.OS == settings.WIN32)?"Win":"Mac") + "/LAST_CHANGE";
     }
     
     /**

@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 /**
@@ -21,9 +23,9 @@ public class ChromiumUpdater {
     public static URL dlurl;
     public static boolean win32 = false;
     public static boolean macosx = false;
-    
+
     public static void main(String[] args) {
-        if(System.getProperty("os.name").contains("Mac OS X")) {
+        if (System.getProperty("os.name").contains("Mac OS X")) {
             macosx = true;
             tempDir = "mactempdir"; //TODO find the mac temp folder
             installDir = null;
@@ -36,18 +38,26 @@ public class ChromiumUpdater {
             //TODO: make ^ this as a pop up box or similar
             System.exit(1);
         }
-                
+
         settings = Settings.load();
+        if (settings.OS == -1) {
+            if (System.getProperty("os.name").contains("Windows")) {
+                settings.OS = settings.WIN32;
+            }
+            if (System.getProperty("os.name").contains("Mac")) {
+                settings.OS = settings.MACOSX;
+            }
+        }
         gui = new GUI();
         gui.runGUI();
-        
+
         check(gui);
-        
+
         //TODO add shutdown-hook to save settings
     }
 
     public static void check(GUI g) {
-        VersionCheck check = new VersionCheck(win32, settings);
+        VersionCheck check = new VersionCheck(settings);
         check.checkRemote();
         g.setLastUpdateTime(settings.lastRemoteCheck);
         g.setLocalVersion(settings.localBuild);
@@ -61,18 +71,18 @@ public class ChromiumUpdater {
 
     static File download(GUI g, int build) {
         try {
-            File f = File.createTempFile("chrome-"+(win32?"win32":"mac")+"-" + build , ".zip");
+            File f = File.createTempFile("chrome-" + (win32 ? "win32" : "mac") + "-" + build, ".zip");
             f.deleteOnExit();
-            if(!f.exists()) {
+            if (!f.exists()) {
                 //ohmygodwearegoingtodie
                 return null;
             }
-            if(win32) {
-                dlurl = new URL(baseDLUrl+"Win/" + build + "/chrome-win32.zip");
-            } else if(macosx) {
-                dlurl = new URL(baseDLUrl+"/Mac/" + build + "/chrome-mac.zip");
+            if (win32) {
+                dlurl = new URL(baseDLUrl + "Win/" + build + "/chrome-win32.zip");
+            } else if (macosx) {
+                dlurl = new URL(baseDLUrl + "/Mac/" + build + "/chrome-mac.zip");
             }
-            
+
             //TODO check if already downloading!
             download = new Download(dlurl, f, g);
             download.download();
@@ -98,22 +108,23 @@ public class ChromiumUpdater {
             System.out.println("Error unzipping!");
         }
     }
-    
+
     static boolean delete(File dir) {
-        if(dir.isDirectory()) {
+        if (dir.isDirectory()) {
             String[] children = dir.list();
-            for(int i = 0;i<children.length;i++) {
-                boolean success=false;
-                if(children[i].endsWith("updater-settings")) {
-                    success=true;
+            for (int i = 0; i < children.length; i++) {
+                boolean success = false;
+                if (children[i].endsWith("updater-settings")) {
+                    success = true;
                 } else {
-                    success = delete(new File(dir,children[i]));
+                    success = delete(new File(dir, children[i]));
                 }
-                if(!success)
+                if (!success) {
                     return false;
+                }
             }
         }
-            
+
         return dir.delete();
     }
 
@@ -166,11 +177,18 @@ public class ChromiumUpdater {
                         System.out.println("Done. Unzipping new build into install directory ...");
                     }
                 }
-                if (win32) {
+                if (settings.OS == settings.WIN32) {
                     unzip(f, installDir); //unzip to program files folder 
-                } else if (macosx) {
+                } else if (settings.OS == settings.MACOSX) {
                     unzip(f, tempDir); //unzip to temp dir
-                    //TODO: copy to Applications using AppleScript (why do we need privileges? fuck apple.)
+                    //TODO: load the cocoasudo binary
+                    Runtime run = Runtime.getRuntime();
+                    String copycmd = "./cocoasudo --prompt=\"Copying Chromium to Applications\" mv " + tempDir +" Applications/";
+                    try {
+                        Process pr = run.exec(copycmd);
+                    } catch (IOException ex) {
+                        System.out.println("Error whilst copying to Applications");
+                    }
                 }
                 System.out.println("Deleting temporary files...");
                 if (!delete(f)) {

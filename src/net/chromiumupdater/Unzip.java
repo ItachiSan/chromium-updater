@@ -1,6 +1,9 @@
 package net.chromiumupdater;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -35,8 +38,8 @@ public class Unzip {
             int len;
             while (entries.hasMoreElements()) {
                 ZipEntry entry = (ZipEntry) entries.nextElement();
-
-                String entryFileName = entry.getName().replaceAll("chrome-"+(ChromiumUpdater.win32?"win32":"mac")+"/", "");
+                //removes the name of the archive from the extract path. so we are one folder above ;-)
+                String entryFileName = entry.getName().replaceAll("chrome-"+((ChromiumUpdater.settings.OS == ChromiumUpdater.settings.WIN32)?"win32":"mac")+"/", "");
                 System.out.println("Unzip: "+entryFileName);
                 File dir = buildDirectoryHierarchyFor(entryFileName, destDir);
 
@@ -70,5 +73,10 @@ public class Unzip {
         int lastIndex = entryName.lastIndexOf('/');
         String internalPathToEntry = entryName.substring(0, lastIndex + 1);
         return new File(destDir, internalPathToEntry);
+    }
+    
+    public static File extractRes() {
+       //TODO
+        return new File("");
     }
 }

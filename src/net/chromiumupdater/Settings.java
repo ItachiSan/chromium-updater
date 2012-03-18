@@ -32,6 +32,11 @@ public class Settings implements Serializable {
     public int remoteVersion;
     public int localVersion;
     
+    public byte OS = -1;
+    
+    public byte WIN32 = 0;
+    public byte MACOSX = 1;
+    
     public long minCheckTime = 60*60*1000; // download max. 60 minutes old versions
 
     public Settings() {
