@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package net.chromiumupdater;
 
 import java.io.*;
@@ -15,11 +11,11 @@ import java.net.URL;
 public class Download {
     private final GUI g;
     private boolean downloading = false;
-    
+
     public Download(GUI g) {
         this.g = g;
     }
-    
+
     public boolean download(URL url, File saveFile) {
         if(downloading) {
             System.out.println("Error: already downloading");
@@ -68,5 +64,5 @@ public class Download {
             }
         }
         return true;
-    }    
+    }
 }
