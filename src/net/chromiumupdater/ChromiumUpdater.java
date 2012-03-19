@@ -38,23 +38,21 @@ public class ChromiumUpdater {
             //TODO: make ^ this as a pop up box or similar
             System.exit(1);
         }
-        
+
         settings = Settings.load();
         if (settings.OS == -1) {
             if (System.getProperty("os.name").contains("Windows")) {
-                settings.OS = settings.WIN32;
+                settings.OS = Settings.WIN32;
             }
             if (System.getProperty("os.name").contains("Mac")) {
-                settings.OS = settings.MACOSX;
+                settings.OS = Settings.MACOSX;
             }
         }
         gui = new GUI();
         download = new Download(gui);
-        
+
         gui.runGUI();
-        
-        
-        
+
         check(gui);
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -174,7 +172,13 @@ public class ChromiumUpdater {
                 File f = download(gui, buildToDownload);
                 System.out.println("Download done. Cleaning install directory ...");
                 if (macosx) {
-                    //TODO: delete old .app file
+                    Runtime run = Runtime.getRuntime();
+                    String delcmd = "./cocoasudo --prompt=\"Copying Chromium to Applications\" rm -R Applications/Chromium.app";
+                    try {
+                        Process pr = run.exec(delcmd);
+                    } catch (IOException ex) {
+                        System.out.println("Error whilst copying to Applications");
+                    }
                 } else if (win32) {
                     if (!delete(new File(installDir))) {
                         System.out.println("Error whilst cleaning install directory!");
@@ -183,13 +187,13 @@ public class ChromiumUpdater {
                     }
                 }
                 //TODO add unzip time to GUI progressbar
-                if (settings.OS == settings.WIN32) {
-                    unzip(f, installDir); //unzip to program files folder 
-                } else if (settings.OS == settings.MACOSX) {
+                if (settings.OS == Settings.WIN32) {
+                    unzip(f, installDir); //unzip to program files folder
+                } else if (settings.OS == Settings.MACOSX) {
                     unzip(f, tempDir); //unzip to temp dir
                     //TODO: load the cocoasudo binary
                     Runtime run = Runtime.getRuntime();
-                    String copycmd = "./cocoasudo --prompt=\"Copying Chromium to Applications\" mv " + tempDir +" Applications/";
+                    String copycmd = "./cocoasudo --prompt=\"Copying Chromium to Applications\" mv -R" + tempDir +" Applications/";
                     try {
                         Process pr = run.exec(copycmd);
                     } catch (IOException ex) {
