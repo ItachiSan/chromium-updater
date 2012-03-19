@@ -7,36 +7,36 @@ import java.io.*;
  * @author morth
  */
 public class Settings implements Serializable {
-    
+
     /**
      * the current local build number
      */
     public int localBuild;
-    
+
     /**
      * the last-checked remote build number
      */
     public int remoteBuild;
-    
+
     /**
      * the last time we checked for a new remote build,
      * in milliseconds since 1.1.1970 00:00:00 UTC (unixtime*1000)
      */
     public long lastRemoteCheck;
-    
+
     /**
      * the last time we updated our local install to the newest version.
      */
     public long lastUpdate;
-    
+
     public int remoteVersion;
     public int localVersion;
-    
+
     public byte OS = -1;
-    
+
     public static final byte WIN32 = 0;
     public static final byte MACOSX = 1;
-    
+
     public long minCheckTime = 60*60*1000; // download max. 60 minutes old versions
 
     public Settings() {
@@ -44,7 +44,7 @@ public class Settings implements Serializable {
 
     public void save() {
         File f = new File(ChromiumUpdater.installDir+"updater-settings");
-        
+
         ObjectOutputStream oos = null;
         try {
             if(!f.exists()){
@@ -54,7 +54,7 @@ public class Settings implements Serializable {
             oos = new ObjectOutputStream(new FileOutputStream(f,false));
             oos.writeObject(this);
             oos.flush();
-            
+
         } catch (IOException ex) {
             ex.printStackTrace();
         } finally {
@@ -72,7 +72,7 @@ public class Settings implements Serializable {
      */
     public static Settings load() {
         File f = new File(ChromiumUpdater.installDir+"updater-settings");
-        
+
         ObjectInputStream ois = null;
         Object o=null;
         try {
@@ -97,7 +97,7 @@ public class Settings implements Serializable {
         } else {
             System.out.println("Settings file in wrong format!");
         }
-        
+
         return new Settings();
     }
 }
