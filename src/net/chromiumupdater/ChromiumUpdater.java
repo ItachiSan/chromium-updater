@@ -69,7 +69,10 @@ public class ChromiumUpdater {
         g.setLocalVersion(settings.localBuild);
         g.setRemoteVersion(settings.remoteBuild);
 	//TODO use "Force" update if checked
-	//TODO show changelog of remote build
+	ChangeLogViewer chlv = new ChangeLogViewer(settings.remoteBuild, settings.OS);
+        chlv.parseXML();
+        g.setChangeLog(chlv.changeLog);
+        
         if (settings.localBuild < settings.remoteBuild) {
             g.showUpdateButton();
         } else {

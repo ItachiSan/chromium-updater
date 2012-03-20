@@ -1,14 +1,14 @@
 package net.chromiumupdater;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  *
@@ -16,83 +16,53 @@ import java.net.URL;
  */
 public class ChangeLogViewer {
 
-    public static int build;
-    public static byte platform;
-    private String changelogXML;
+    public int build;
+    public byte platform;
     public String changeLog;
 
     public ChangeLogViewer(int build, byte platform) {
 	this.build = build;
-	this.platform = platform; //load from settings instead?
-	this.changelogXML = "";
+	this.platform = platform; //TODO: maybe load directly from settings instead?
 	this.changeLog = "";
     }
 
     /**
      * @return will fetch the xml-change-log file according to platform and build number and save it into a String
      */
-    public static boolean  fetchXMl() {
-	//TODO: write the code below
-	//make it whithout a File - read the xml directly into a string
-	HttpURLConnection http = null;
-	BufferedInputStream in = null;
-	OutputStream out = null;
-	URL url = null;
-	try {
-	    url = new URL("http://commondatastorage.googleapis.com/chromium-browser-continuous/"+(platform==0?"Win":"Mac")+"/"+build+"/changelog.xml");
-	} catch (MalformedURLException ex) {
-	    System.out.println("Error whilst fetching changelog");
-	}
-	File changeLogFile = null;
-	try {
-	    http = (HttpURLConnection) url.openConnection();
-	    int size = Integer.parseInt(http.getHeaderField("Content-Length"));
+    public void parseXML() {
+        try {
+            StringBuilder output = new StringBuilder();
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = null;
+            try {
+                doc = db.parse("http://commondatastorage.googleapis.com/chromium-browser-continuous/"+(platform==0?"Win":"Mac")+"/"+build+"/changelog.xml");
+            } catch (IOException ex) {
+                System.out.println("Error whilst getting the changelog.");
+            }
+            doc.getDocumentElement().normalize();
+            output.append("CHANGELOG: ").append(System.getProperty("line.separator"));
+            NodeList nodeList = doc.getElementsByTagName("logentry");
 
-	    in = new BufferedInputStream(http.getInputStream());
-	    out = new BufferedOutputStream(new FileOutputStream(changeLogFile));
-	    byte[] buffer = new byte[1024];
-	    int n = 0;
-	    while ((n = in.read(buffer)) >= 0) {
-		out.write(buffer, 0, n);
-	    }
-	    out.flush();
-	} catch (IOException ex) {
-	    ex.printStackTrace();
-	    return false;
-	} finally {
-	    if (in != null) {
-		try {
-		    in.close();
-		} catch (IOException ex) {
-		}
-	    }
-	    if (out != null) {
-		try {
-		    out.close();
-		} catch (IOException ex) {
-		}
-	    }
-	    if (http != null) {
-		http.disconnect();
-	    }
-	}
-	return true;
-    }
+            for (int s = 0; s < nodeList.getLength(); s++) {
+                Node node = nodeList.item(s);
 
-    /**
-     * @return will remove all XML tags and format the changelog a little
-     */
-    public static void formatXML() {
-	//remove xml tags
-	//maybe make a ASCII formatting or tables stuff here
-	//put some important changelog parts to uppercase
-    }
-
-    /**
-     * @return returns the changelog
-     * @return
-     */
-    public static String returnChangeLog() {
-	return "";
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+                    Element element = (Element) node;
+                    NodeList dateLst = element.getElementsByTagName("date");
+                    Element date = (Element) dateLst.item(0);
+                    NodeList dateNm = date.getChildNodes();
+                    output.append("DATE: ").append(((Node) dateNm.item(0)).getNodeValue());
+                    output.append(System.getProperty("line.separator"));
+                    NodeList msgLst = element.getElementsByTagName("msg");
+                    Element msg = (Element) msgLst.item(0);
+                    NodeList msgNm = msg.getChildNodes();
+                    output.append(((Node) msgNm.item(0)).getNodeValue().replaceAll("(?m)^[ \t]*\r?\n", ""));
+                }
+            }
+            changeLog = output.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
