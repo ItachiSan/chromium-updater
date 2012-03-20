@@ -74,6 +74,8 @@ public class ChromiumUpdater {
             g.showUpdateButton();
         } else {
             g.setLabel("already up-to-date!");
+	    g.showUpdateButton = false;
+	    g.hideUpdateButton();
         }
     }
 

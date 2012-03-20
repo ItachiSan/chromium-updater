@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package net.chromiumupdater;
 
 import java.util.Date;
@@ -11,12 +7,14 @@ import java.util.Date;
  * @author morth
  */
 public class GUI extends javax.swing.JFrame {
-
+    private boolean forceChecked = false;
+    public boolean showUpdateButton = false;
     /**
      * Creates new form GUI
      */
     public GUI() {
         initComponents();
+	forceChecked = false;
     }
 
     public void setLocalVersion(Integer version) {
@@ -62,7 +60,14 @@ public class GUI extends javax.swing.JFrame {
     }
 
     void showUpdateButton() {
+	showUpdateButton = true;
         updateButton.setEnabled(true);
+    }
+
+    void hideUpdateButton() {
+	if(!showUpdateButton) {
+	    updateButton.setEnabled(false);
+	}
     }
 
     void setChangeLog(String s) {
@@ -210,7 +215,12 @@ public class GUI extends javax.swing.JFrame {
     }//GEN-LAST:event_aboutButtonActionPerformed
 
     private void forceCheckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_forceCheckActionPerformed
-	//TODO make the update button now always visible
+	forceChecked = !forceChecked;
+	if(forceChecked) {
+	    showUpdateButton();
+	} else {
+	    hideUpdateButton();
+	}
     }//GEN-LAST:event_forceCheckActionPerformed
 
     /**
