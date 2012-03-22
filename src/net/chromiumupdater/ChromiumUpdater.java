@@ -27,7 +27,7 @@ public class ChromiumUpdater {
     public static void main(String[] args) {
         if (System.getProperty("os.name").contains("Mac OS X")) {
             macosx = true;
-            tempDir = "mactempdir"; //TODO find the mac temp folder
+            tempDir = "mactempdir"; //TODO find the mac temp folder  SOLUTION: use java tmp file
             installDir = null;
         } else if (System.getProperty("os.name").contains("Windows")) {
             win32 = true;
@@ -72,9 +72,10 @@ public class ChromiumUpdater {
 	ChangeLogViewer chlv = new ChangeLogViewer(settings.remoteBuild, settings.OS);
         chlv.parseXML();
         g.setChangeLog(chlv.changeLog);
-        
+
         if (settings.localBuild < settings.remoteBuild) {
-            g.showUpdateButton();
+            g.showUpdateButton = true;
+	    g.showUpdateButton();
         } else {
             g.setLabel("already up-to-date!");
 	    g.showUpdateButton = false;
@@ -198,7 +199,6 @@ public class ChromiumUpdater {
                     unzip(f, installDir); //unzip to program files folder
                 } else if (settings.OS == Settings.MACOSX) {
                     unzip(f, tempDir); //unzip to temp dir
-                    //TODO: load the cocoasudo binary
                     Runtime run = Runtime.getRuntime();
                     String copycmd = "./cocoasudo --prompt=\"Copying Chromium to Applications\" mv -R" + tempDir +" Applications/";
                     try {
