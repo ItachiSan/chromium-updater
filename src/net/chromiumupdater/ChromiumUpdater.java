@@ -28,7 +28,7 @@ public class ChromiumUpdater {
         if (System.getProperty("os.name").contains("Mac OS X")) {
             macosx = true;
             tempDir = "mactempdir"; //TODO find the mac temp folder
-            installDir = null;
+            installDir = "/Applications/Chromium.app/"; //"null" often leads to NullPointerExceptions.
         } else if (System.getProperty("os.name").contains("Windows")) {
             win32 = true;
             tempDir = System.getenv("TMP");
