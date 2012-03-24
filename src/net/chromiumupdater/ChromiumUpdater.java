@@ -27,7 +27,7 @@ public class ChromiumUpdater {
     public static void main(String[] args) {
         if (System.getProperty("os.name").contains("Mac OS X")) {
             macosx = true;
-            tempDir = "mactempdir"; //TODO find the mac temp folder
+            tempDir = "mactempdir"; //TODO find the mac temp folder  SOLUTION: use java tmp file
             installDir = "/Applications/Chromium.app/"; //"null" often leads to NullPointerExceptions.
         } else if (System.getProperty("os.name").contains("Windows")) {
             win32 = true;
@@ -72,9 +72,10 @@ public class ChromiumUpdater {
 	ChangeLogViewer chlv = new ChangeLogViewer(settings.remoteBuild, settings.OS);
         chlv.parseXML();
         g.setChangeLog(chlv.changeLog);
-        
+
         if (settings.localBuild < settings.remoteBuild) {
-            g.showUpdateButton();
+            g.showUpdateButton = true;
+	    g.showUpdateButton();
         } else {
             g.setLabel("already up-to-date!");
 	    g.showUpdateButton = false;
@@ -91,9 +92,9 @@ public class ChromiumUpdater {
                 return null;
             }
             if (win32) {
-                dlurl = new URL(baseDLUrl + "Win/" + build + "/chrome-win32.zip");
+                dlurl = new URL(baseDLUrl + "Win/" + build + "/public-read/chrome-win32.zip");
             } else if (macosx) {
-                dlurl = new URL(baseDLUrl + "/Mac/" + build + "/chrome-mac.zip");
+                dlurl = new URL(baseDLUrl + "/Mac/" + build + "/public-read/chrome-mac.zip");
             }
             download.download(dlurl, f);
             return f;
@@ -147,7 +148,7 @@ public class ChromiumUpdater {
                 Settings s = ChromiumUpdater.settings;
                 int buildToDownload = s.remoteBuild;
                 //check if we updated
-                if (s.lastRemoteCheck + s.minCheckTime < System.currentTimeMillis()) {
+                if (s.lastRemoteCheck + s.minCheckTime < System.currentTimeMillis() || gui.forceChecked ) {
                     int oldChecked = s.remoteBuild;
                     check(ChromiumUpdater.gui);
                     if (oldChecked != s.remoteBuild) {
@@ -198,7 +199,6 @@ public class ChromiumUpdater {
                     unzip(f, installDir); //unzip to program files folder
                 } else if (settings.OS == Settings.MACOSX) {
                     unzip(f, tempDir); //unzip to temp dir
-                    //TODO: load the cocoasudo binary
                     Runtime run = Runtime.getRuntime();
                     String copycmd = "./cocoasudo --prompt=\"Copying Chromium to Applications\" mv -R" + tempDir +" Applications/";
                     try {
